@@ -34,7 +34,7 @@ public class DatastoreWrite extends HttpServlet {
      * Display stored objects in Datastore
      *
      * @param datastore DatastoreService
-     * @param pw        PrintWriter
+     * @param pw PrintWriter
      */
     public void DisplayAllEntries(DatastoreService datastore, PrintWriter pw) {
 
@@ -53,27 +53,41 @@ public class DatastoreWrite extends HttpServlet {
 
     /**
      * Insert new entry in DataStore
-     *
-     * @param req       HttpServletRequest
-     * @param resp      HttpServletResponse
+     * @param req HttpServletRequest
+     * @param resp HttpServletResponse
      * @param datastore DatastoreService
      * @throws IOException
      */
     public void NewEntry(HttpServletRequest req, HttpServletResponse resp, DatastoreService datastore) throws IOException {
 
+        PrintWriter pw = resp.getWriter();
+
         String pkey;
         String pval;
-
+        Entity object;
         Enumeration parameters = req.getParameterNames();
 
         // Get every parameters and store them in datastore
-        Entity object = new Entity(req.getParameter("_kind"));
-        while (parameters.hasMoreElements()) {
-            pkey = (String) parameters.nextElement();
-            pval = req.getParameter(pkey);
+        if (req.getParameter("_kind") != null) {
 
-            object.setProperty(pkey, pval);
+            // If kind and key set by user
+            if(req.getParameter("_key") != null){
+                object = new Entity(req.getParameter("_kind"), req.getParameter("_key"));
+            }
+            // If key not set - Datastore create it automatically
+            else{
+                object = new Entity(req.getParameter("_kind"));
+            }
+
+            while (parameters.hasMoreElements()) {
+                pkey = (String) parameters.nextElement();
+                pval = req.getParameter(pkey);
+
+                object.setProperty(pkey, pval);
+            }
+            datastore.put(object);
+        } else {
+            pw.println("Error : Parameters _kind is missing");
         }
-        datastore.put(object);
     }
 }
